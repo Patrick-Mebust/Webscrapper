@@ -1,7 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from wordcloud import WordCloud
 from typing import List, Dict
 import logging
 from pathlib import Path
@@ -229,6 +228,43 @@ class JobVisualizer:
         
         plt.tight_layout()
         self._save_plot(plt, 'sentiment_scores', save_path)
+
+    def plot_sentiment_trends(self, job_postings: List[Dict], save_path: str = None) -> None:
+        """
+        Plot sentiment trends over time.
+        
+        Args:
+            job_postings (List[Dict]): List of job postings with sentiment analysis
+            save_path (str, optional): Path to save the plot
+        """
+        # Convert to DataFrame for easier manipulation
+        df = pd.DataFrame(job_postings)
+        
+        # Extract dates and scores
+        df['date'] = pd.to_datetime(df['posted_date'])
+        df['textblob_score'] = df['sentiment_analysis'].apply(lambda x: x['textblob_score'])
+        df['vader_score'] = df['sentiment_analysis'].apply(lambda x: x['vader_scores']['compound'])
+        df['spacy_score'] = df['sentiment_analysis'].apply(lambda x: x['spacy_score'])
+        
+        # Calculate rolling averages
+        window = 7  # 7-day rolling average
+        df['textblob_rolling'] = df['textblob_score'].rolling(window=window).mean()
+        df['vader_rolling'] = df['vader_score'].rolling(window=window).mean()
+        df['spacy_rolling'] = df['spacy_score'].rolling(window=window).mean()
+        
+        # Plot trends
+        plt.figure(figsize=(12, 6))
+        plt.plot(df['date'], df['textblob_rolling'], label='TextBlob')
+        plt.plot(df['date'], df['vader_rolling'], label='VADER')
+        plt.plot(df['date'], df['spacy_rolling'], label='spaCy')
+        
+        plt.title('Sentiment Score Trends Over Time')
+        plt.xlabel('Date')
+        plt.ylabel('Sentiment Score (7-day rolling average)')
+        plt.legend()
+        plt.grid(True)
+        
+        self._save_plot(plt, 'sentiment_trends', save_path)
 
 if __name__ == "__main__":
     # Example usage

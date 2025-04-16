@@ -1,8 +1,8 @@
 import argparse
 import logging
-from scrapers.job_scraper import IndeedScraper, LinkedInScraper
-from utils.helpers import save_to_json, save_to_csv
-from utils.visualization import JobVisualizer
+from src.scrapers.job_scraper import IndeedScraper, LinkedInScraper
+from src.utils.helpers import save_to_json, save_to_csv
+from src.utils.visualization import JobVisualizer
 from datetime import datetime
 
 # Configure logging

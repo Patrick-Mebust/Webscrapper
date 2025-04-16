@@ -7,6 +7,8 @@ import logging
 from urllib.parse import urljoin
 from datetime import datetime
 from src.utils.sentiment_analyzer import SentimentAnalyzer
+from src.utils.helpers import clean_text
+import random
 
 # Configure logging
 logging.basicConfig(
@@ -45,27 +47,49 @@ class JobScraper:
         self.session = requests.Session()
         
     def _get_headers(self) -> Dict[str, str]:
-        """Generate random headers for each request."""
+        """Get headers for HTTP requests."""
+        ua = UserAgent()
         return {
-            'User-Agent': self.ua.random,
+            'User-Agent': ua.random,
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Cache-Control': 'max-age=0',
+            'TE': 'Trailers'
         }
     
     def _make_request(self, url: str) -> Optional[requests.Response]:
-        """Make a request with error handling and rate limiting."""
-        try:
-            response = self.session.get(
-                url,
-                headers=self._get_headers(),
-                timeout=10
-            )
-            response.raise_for_status()
-            time.sleep(2)  # More conservative rate limiting for job sites
-            return response
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error fetching {url}: {str(e)}")
-            return None
+        """Make an HTTP request with retries and delays."""
+        max_retries = 3
+        retry_delay = 5
+        
+        for attempt in range(max_retries):
+            try:
+                headers = self._get_headers()
+                response = requests.get(url, headers=headers, timeout=30)
+                
+                if response.status_code == 200:
+                    time.sleep(random.uniform(2, 5))  # Random delay between requests
+                    return response
+                elif response.status_code == 403:
+                    logger.warning(f"Rate limited on attempt {attempt + 1}, waiting {retry_delay} seconds")
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                else:
+                    logger.error(f"Error {response.status_code} for URL: {url}")
+                    return None
+                
+            except requests.RequestException as e:
+                logger.error(f"Request failed on attempt {attempt + 1}: {str(e)}")
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay)
+                    retry_delay *= 2
+                else:
+                    return None
+        
+        return None
     
     def _extract_job_details(self, soup: BeautifulSoup, job_url: str) -> Dict:
         """Extract job details from a job listing page."""
@@ -172,6 +196,9 @@ class JobScraper:
         return self.sentiment_analyzer.analyze_company_sentiment(company_jobs)
 
 class IndeedScraper(JobScraper):
+    def __init__(self):
+        super().__init__("https://www.indeed.com")
+
     def _extract_job_listings(self, soup: BeautifulSoup) -> List[Dict]:
         """Extract job listings from Indeed search results."""
         jobs = []
@@ -242,6 +269,9 @@ class IndeedScraper(JobScraper):
         return None
 
 class LinkedInScraper(JobScraper):
+    def __init__(self):
+        super().__init__("https://www.linkedin.com")
+
     def _extract_job_listings(self, soup: BeautifulSoup) -> List[Dict]:
         """Extract job listings from LinkedIn search results."""
         jobs = []
@@ -314,8 +344,8 @@ class LinkedInScraper(JobScraper):
 
 if __name__ == "__main__":
     # Example usage
-    indeed_scraper = IndeedScraper("https://www.indeed.com")
-    linkedin_scraper = LinkedInScraper("https://www.linkedin.com")
+    indeed_scraper = IndeedScraper()
+    linkedin_scraper = LinkedInScraper()
     
     # Scrape Indeed jobs
     indeed_jobs = indeed_scraper.scrape_job_listings(
