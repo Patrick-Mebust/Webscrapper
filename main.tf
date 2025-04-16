@@ -1,12 +1,19 @@
 # Configure the AWS Provider
 provider "aws" {
-  region = var.aws_region
+  region = "us-east-1"
+}
+
+# Get the default VPC
+data "aws_vpc" "default" {
+  default = true
 }
 
 # Create a security group
 resource "aws_security_group" "example" {
   name        = "terraform-example-sg"
   description = "Security group for Terraform example instance"
+  vpc_id      = data.aws_vpc.default.id
+  revoke_rules_on_delete = false
 
   ingress {
     from_port   = 22
@@ -37,12 +44,22 @@ resource "aws_security_group" "example" {
 
 # Resource - Define infrastructure components
 resource "aws_instance" "example" {
-  ami           = "ami-0c55b159cbfafe1f0"  # Ubuntu 20.04 LTS AMI ID
+  ami           = "ami-0c7217cdde317cfec"  # Ubuntu 22.04 LTS AMI ID for us-east-1
   instance_type = var.instance_type
+  key_name      = "terraform-key"
   vpc_security_group_ids = [aws_security_group.example.id]
 
   tags = {
     Name        = "terraform-example"
     Environment = var.environment
   }
+
+  # Wait for instance to be ready
+  user_data = <<-EOF
+              #!/bin/bash
+              apt-get update
+              apt-get install -y openssh-server
+              systemctl enable ssh
+              systemctl start ssh
+              EOF
 }

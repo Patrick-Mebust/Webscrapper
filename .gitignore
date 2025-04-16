@@ -35,3 +35,6 @@ credentials
 config
 awscliv2.zip
 aws/
+terraform-key.pem
+terraform-ec2-policy.json
+**/TI06SrUFNsPXidzfenk4T90HipN5W7Vn
