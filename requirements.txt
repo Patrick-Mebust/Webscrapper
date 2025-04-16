@@ -11,4 +11,7 @@ fake-useragent==1.4.0
 tqdm==4.66.1
 pytest==7.4.3
 black==23.11.0
-flake8==6.1.0 
+flake8==6.1.0
+nltk==3.8.1
+spacy==3.7.2
+textblob==0.17.1 

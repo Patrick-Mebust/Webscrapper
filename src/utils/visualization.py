@@ -19,12 +19,14 @@ class JobVisualizer:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
     
-    def _save_plot(self, fig, filename: str) -> None:
+    def _save_plot(self, fig, filename: str, save_path: str = None) -> None:
         """Save a matplotlib figure to a file."""
         filepath = self.output_dir / f"{filename}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
         fig.savefig(filepath, bbox_inches='tight', dpi=300)
         plt.close(fig)
         logger.info(f"Saved visualization to {filepath}")
+        if save_path:
+            save_path.append(filepath)
     
     def plot_jobs_by_company(self, jobs: List[Dict]) -> None:
         """Create a bar plot of jobs by company."""
@@ -121,6 +123,112 @@ class JobVisualizer:
             logger.info("All visualizations generated successfully")
         except Exception as e:
             logger.error(f"Error generating visualizations: {str(e)}")
+
+    def plot_sentiment_distribution(self, job_postings: List[Dict], save_path: str = None) -> None:
+        """
+        Plot the distribution of sentiment scores across job postings.
+        
+        Args:
+            job_postings (List[Dict]): List of job postings with sentiment analysis
+            save_path (str, optional): Path to save the plot
+        """
+        sentiments = [job['sentiment_analysis']['overall_sentiment'] for job in job_postings]
+        sentiment_counts = pd.Series(sentiments).value_counts()
+        
+        plt.figure(figsize=(10, 6))
+        sns.barplot(x=sentiment_counts.index, y=sentiment_counts.values)
+        plt.title('Distribution of Sentiment in Job Descriptions')
+        plt.xlabel('Sentiment')
+        plt.ylabel('Number of Job Postings')
+        
+        self._save_plot(plt, 'sentiment_distribution', save_path)
+
+    def plot_company_sentiment(self, company_analysis: Dict, save_path: str = None) -> None:
+        """
+        Plot sentiment analysis for a specific company.
+        
+        Args:
+            company_analysis (Dict): Company sentiment analysis results
+            save_path (str, optional): Path to save the plot
+        """
+        plt.figure(figsize=(10, 6))
+        
+        # Plot sentiment distribution
+        distribution = company_analysis['sentiment_distribution']
+        plt.bar(distribution.keys(), distribution.values())
+        
+        plt.title(f"Company Job Posting Sentiment Analysis\nOverall: {company_analysis['average_sentiment']}")
+        plt.xlabel('Sentiment')
+        plt.ylabel('Number of Job Postings')
+        
+        self._save_plot(plt, 'company_sentiment', save_path)
+
+    def plot_sentiment_wordcloud(self, job_postings: List[Dict], sentiment: str = 'positive', save_path: str = None) -> None:
+        """
+        Generate a word cloud for job descriptions with a specific sentiment.
+        
+        Args:
+            job_postings (List[Dict]): List of job postings with sentiment analysis
+            sentiment (str): Sentiment to filter ('positive', 'negative', or 'neutral')
+            save_path (str, optional): Path to save the plot
+        """
+        # Filter job descriptions by sentiment
+        filtered_descriptions = [
+            job['description'] for job in job_postings 
+            if job['sentiment_analysis']['overall_sentiment'] == sentiment
+        ]
+        
+        if not filtered_descriptions:
+            self.logger.warning(f"No job descriptions found with {sentiment} sentiment")
+            return
+        
+        # Generate word cloud
+        text = ' '.join(filtered_descriptions)
+        wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
+        
+        plt.figure(figsize=(10, 6))
+        plt.imshow(wordcloud, interpolation='bilinear')
+        plt.axis('off')
+        plt.title(f'Word Cloud for {sentiment.capitalize()} Job Descriptions')
+        
+        self._save_plot(plt, f'wordcloud_{sentiment}', save_path)
+
+    def plot_sentiment_scores(self, job_postings: List[Dict], save_path: str = None) -> None:
+        """
+        Plot the distribution of sentiment scores across all job postings.
+        
+        Args:
+            job_postings (List[Dict]): List of job postings with sentiment analysis
+            save_path (str, optional): Path to save the plot
+        """
+        # Extract sentiment scores
+        textblob_scores = [job['sentiment_analysis']['textblob_score'] for job in job_postings]
+        vader_scores = [job['sentiment_analysis']['vader_scores']['compound'] for job in job_postings]
+        spacy_scores = [job['sentiment_analysis']['spacy_score'] for job in job_postings]
+        
+        # Create subplots
+        fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+        
+        # Plot TextBlob scores
+        sns.histplot(textblob_scores, ax=axes[0], bins=20)
+        axes[0].set_title('TextBlob Sentiment Scores')
+        axes[0].set_xlabel('Score')
+        axes[0].set_ylabel('Count')
+        
+        # Plot VADER scores
+        sns.histplot(vader_scores, ax=axes[1], bins=20)
+        axes[1].set_title('VADER Sentiment Scores')
+        axes[1].set_xlabel('Score')
+        axes[1].set_ylabel('Count')
+        
+        # Plot spaCy scores
+        sns.histplot(spacy_scores, ax=axes[2], bins=20)
+        axes[2].set_title('spaCy Sentiment Scores')
+        axes[2].set_xlabel('Score')
+        axes[2].set_ylabel('Count')
+        
+        plt.tight_layout()
+        self._save_plot(plt, 'sentiment_scores', save_path)
 
 if __name__ == "__main__":
     # Example usage

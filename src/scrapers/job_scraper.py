@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 import logging
 from urllib.parse import urljoin
 from datetime import datetime
+from src.utils.sentiment_analyzer import SentimentAnalyzer
 
 # Configure logging
 logging.basicConfig(
@@ -39,6 +40,7 @@ class BaseScraper:
 class JobScraper:
     def __init__(self, base_url: str):
         self.base_url = base_url
+        self.sentiment_analyzer = SentimentAnalyzer()
         self.ua = UserAgent()
         self.session = requests.Session()
         
@@ -127,6 +129,47 @@ class JobScraper:
         
         soup = BeautifulSoup(response.text, 'lxml')
         return self._extract_job_details(soup, job_url)
+
+    def scrape_jobs(self, max_pages: int = 5) -> List[Dict]:
+        """
+        Scrape job postings from the website.
+        
+        Args:
+            max_pages (int): Maximum number of pages to scrape
+            
+        Returns:
+            List[Dict]: List of job postings with sentiment analysis
+        """
+        job_postings = []
+        job_listings = self.scrape_job_listings(self.base_url)
+        
+        for job in job_listings:
+            job_data = {
+                'title': job.get('title', ''),
+                'company': job.get('company', ''),
+                'location': job.get('location', ''),
+                'description': job.get('description', ''),
+                'url': job.get('url', ''),
+                'sentiment_analysis': self.sentiment_analyzer.analyze_job_description(
+                    job.get('description', '')
+                )
+            }
+            job_postings.append(job_data)
+        
+        return job_postings
+
+    def get_company_sentiment_analysis(self, company_name: str) -> Dict:
+        """
+        Get sentiment analysis for all job postings from a specific company.
+        
+        Args:
+            company_name (str): Name of the company to analyze
+            
+        Returns:
+            Dict: Company-level sentiment analysis
+        """
+        company_jobs = [job for job in self.scrape_jobs() if job['company'].lower() == company_name.lower()]
+        return self.sentiment_analyzer.analyze_company_sentiment(company_jobs)
 
 class IndeedScraper(JobScraper):
     def _extract_job_listings(self, soup: BeautifulSoup) -> List[Dict]:
