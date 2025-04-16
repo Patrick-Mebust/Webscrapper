@@ -38,3 +38,34 @@ aws/
 terraform-key.pem
 terraform-ec2-policy.json
 **/TI06SrUFNsPXidzfenk4T90HipN5W7Vn
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific
+data/
+logs/
+*.log
+
+# OS specific
+.DS_Store
+Thumbs.db

@@ -168,3 +168,22 @@ resource "aws_sns_topic_policy" "default" {
 
 # Get current AWS account ID
 data "aws_caller_identity" "current" {}
+
+# Create IAM policy for SNS access
+resource "aws_iam_user_policy" "sns_access" {
+  name = "SNSAccess"
+  user = "TerraCusor"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sns:*"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}

@@ -1,24 +1,101 @@
-# Terraform Learning Project
+# Job Scraper
 
-This repository contains examples and best practices for learning Terraform. It demonstrates infrastructure as code (IaC) concepts using AWS as the cloud provider.
+A Python-based web scraper for job listings from Indeed and LinkedIn, with data visualization capabilities.
+
+## Features
+
+- Scrape job listings from Indeed and LinkedIn
+- Save data in JSON or CSV format
+- Generate visualizations:
+  - Jobs by company
+  - Jobs by location
+  - Job types distribution
+  - Word cloud of job descriptions
+  - Salary ranges distribution
+- Error handling and logging
+- Configurable search parameters
 
 ## Prerequisites
 
-- Terraform (v1.11.3 or later)
-- AWS CLI configured with appropriate credentials
-- Basic understanding of AWS services
+- Python 3.8+
+- pip (Python package installer)
 
-## Getting Started
+## Installation
 
-1. Clone this repository
-2. Run `terraform init`
-3. Run `terraform plan`
-4. Run `terraform apply`
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/job-scraper.git
+cd job-scraper
+```
 
-## Security Note
+2. Create a virtual environment (optional but recommended):
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-This is a learning project. In a production environment, you should:
-- Never commit AWS credentials to version control
-- Use proper state management
-- Implement proper security groups and network isolation
-- Use workspaces for environment separation
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+
+Run the scraper with the following command:
+
+```bash
+python src/main.py <site> <query> [options]
+```
+
+### Arguments
+
+- `site`: Job site to scrape (choices: indeed, linkedin)
+- `query`: Job search query
+
+### Options
+
+- `--location`: Job location (default: Remote)
+- `--max-pages`: Maximum number of pages to scrape (default: 5)
+- `--output-format`: Output format (choices: json, csv, default: json)
+
+### Examples
+
+Scrape Python developer jobs from Indeed:
+```bash
+python src/main.py indeed "python developer" --location "Remote"
+```
+
+Scrape data science jobs from LinkedIn:
+```bash
+python src/main.py linkedin "data scientist" --max-pages 3 --output-format csv
+```
+
+## Project Structure
+
+```
+job-scraper/
+├── src/
+│   ├── scrapers/
+│   │   └── job_scraper.py
+│   ├── utils/
+│   │   ├── helpers.py
+│   │   └── visualization.py
+│   └── main.py
+├── data/
+│   ├── jobs/
+│   └── visualizations/
+├── tests/
+├── requirements.txt
+└── README.md
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a new branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
