@@ -12,3 +12,11 @@ output "instance_public_dns" {
   description = "Public DNS name of the EC2 instance"
   value       = aws_instance.example.public_dns
 }
+
+output "s3_bucket_name" {
+  value = aws_s3_bucket.example.id
+}
+
+output "s3_bucket_arn" {
+  value = aws_s3_bucket.example.arn
+}
