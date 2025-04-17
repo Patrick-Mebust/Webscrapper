@@ -44,16 +44,27 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
-
-# Distribution / packaging
-dist/
+.Python
 build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
 *.egg-info/
+.installed.cfg
+*.egg
 
 # Virtual Environment
 venv/
-env/
 ENV/
+env/
 
 # IDE
 .idea/
@@ -69,3 +80,22 @@ logs/
 # OS specific
 .DS_Store
 Thumbs.db
+
+# AWS
+*.pem
+*.zip
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+*.tfvars
+*.tfstate.*
+*.tfvars.json
+
+# Large files
+*.zip
+*.tar.gz
+*.tar
+*.gz
+*.rar
+*.7z
