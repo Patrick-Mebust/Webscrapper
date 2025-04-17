@@ -65,6 +65,8 @@ wheels/
 venv/
 ENV/
 env/
+.env/
+.venv/
 
 # IDE
 .idea/
@@ -73,9 +75,15 @@ env/
 *.swo
 
 # Project specific
-data/
-logs/
+data/*.json
+data/*.csv
+data/visualizations/*.png
+!data/visualizations/.gitkeep
+!data/.gitkeep
+
+# Logs
 *.log
+logs/
 
 # OS specific
 .DS_Store
